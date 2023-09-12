@@ -1,23 +1,10 @@
 import streamlit as st
 import pandas as pd
 import random
-import time
 import base64
 
 def main():
     st.title("Prize Generator App")
-    
-    st.markdown("""
-        <style>
-            body {
-                background-color: #E6E6FA;
-            }
-            .stButton>button {
-                background-color: #4CAF50;
-                color: white;
-            }
-        </style>
-        """, unsafe_allow_html=True)
 
     if 'data' not in st.session_state:
         st.session_state.data = None
@@ -41,7 +28,9 @@ def main():
             num_winners = st.number_input("Enter the number of winners:", min_value=1, max_value=len(st.session_state.data))
             if st.button("Select Winners"):
                 winners = select_random_winners(st.session_state.data, num_winners)
-                st.markdown(download_link(winners, "winners.csv", "Download Winners"), unsafe_allow_html=True)
+                st.write("Winners:")
+                st.write(winners)
+                st.markdown(get_table_download_link(winners, "winners.csv", "Download Winners Data"), unsafe_allow_html=True)
 
         if city_col:
             special_city = st.selectbox("Select a city for special prizes:", list(st.session_state.data[city_col].unique()))
@@ -50,7 +39,9 @@ def main():
                 num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=max_special_winners)
                 if st.button("Select Special Winners"):
                     special_winners = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners)
-                    st.markdown(download_link(special_winners, "special_winners.csv", "Download Special Winners"), unsafe_allow_html=True)
+                    st.write(f"Special Winners from {special_city}:")
+                    st.write(special_winners)
+                    st.markdown(get_table_download_link(special_winners, "special_winners.csv", "Download Special Winners Data"), unsafe_allow_html=True)
 
 def assign_ticket_numbers(data, ticket_col):
     ticket_counter = 1
@@ -74,10 +65,6 @@ def select_random_winners(data, p):
         winner_info = data[data['Assigned Tickets'].apply(lambda x: ticket in x)].iloc[0]
         winner_info['Winning Ticket'] = ticket
         winners.append(winner_info)
-        st.write(f"Winner Ticket: {ticket}")
-        st.write(winner_info)
-        time.sleep(1)
-
     return pd.DataFrame(winners)
 
 def select_special_winners(data, city_col, city, k):
@@ -95,18 +82,17 @@ def select_special_winners(data, city_col, city, k):
         winner_info = city_data[city_data['Assigned Tickets'].apply(lambda x: ticket in x)].iloc[0]
         winner_info['Winning Ticket'] = ticket
         city_winners.append(winner_info)
-        st.write(f"Special Winner Ticket from {city}: {ticket}")
-        st.write(winner_info)
-        time.sleep(1)
-
     return pd.DataFrame(city_winners)
 
-def download_link(object_to_download, download_filename, download_link_text):
-    if isinstance(object_to_download, pd.DataFrame):
-        object_to_download = object_to_download.to_csv(index=False)
-
-    b64 = base64.b64encode(object_to_download.encode()).decode()
-    return f'<a href="data:file/txt;base64,{b64}" download="{download_filename}">{download_link_text}</a>'
+def get_table_download_link(df, filename, link_text):
+    """Generates a link allowing the data in a given panda dataframe to be downloaded
+    in:  dataframe
+    out: href string
+    """
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
+    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}">{link_text}</a>'
+    return href
 
 if __name__ == "__main__":
     main()
