@@ -4,35 +4,30 @@ import random
 def main():
     st.title("Prize Generator App")
 
-    # Initialize session_state attributes if they don't exist
     if 'data' not in st.session_state:
-        st.session_state.data = pd.DataFrame()
+        st.session_state.data = None
 
     uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
 
     if uploaded_file:
         st.session_state.data = pd.read_excel(uploaded_file)
-        st.session_state.uploaded = True
-    else:
-        st.session_state.uploaded = False
 
-    if st.session_state.uploaded:
+    if st.session_state.data is not None:
         st.write(st.session_state.data)
 
         ticket_col = st.selectbox("Select the column for number of tickets bought:", list(st.session_state.data.columns))
         city_col = st.selectbox("Select the column for cities:", list(st.session_state.data.columns))
 
-        if ticket_col and 'tickets_assigned' not in st.session_state:
+        if ticket_col and 'Assigned Tickets' not in st.session_state.data.columns:
             if st.button("Assign Ticket Numbers"):
-                st.session_state.data[ticket_col] = st.session_state.data[ticket_col].astype(int)
                 st.session_state.data = assign_ticket_numbers(st.session_state.data, ticket_col)
-                st.session_state.tickets_assigned = True
 
-        num_winners = st.number_input("Enter the number of winners:", min_value=1, max_value=len(st.session_state.data))
-        if st.button("Select Winners"):
-            winners = select_random_winners(st.session_state.data, num_winners)
-            st.write("Winners:")
-            st.write(winners)
+        if 'Assigned Tickets' in st.session_state.data.columns:
+            num_winners = st.number_input("Enter the number of winners:", min_value=1, max_value=len(st.session_state.data))
+            if st.button("Select Winners"):
+                winners = select_random_winners(st.session_state.data, num_winners)
+                st.write("Winners:")
+                st.write(winners)
 
         if city_col:
             special_city = st.selectbox("Select a city for special prizes:", list(st.session_state.data[city_col].unique()))
