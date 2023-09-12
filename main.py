@@ -20,16 +20,17 @@ def main():
         city_col = st.selectbox("Select the column for cities:", list(st.session_state.data.columns))
 
         if ticket_col and 'Assigned Tickets' not in st.session_state.data.columns:
-            if st.button("Assign Ticket Numbers"):
-                st.session_state.data = assign_ticket_numbers(st.session_state.data, ticket_col)
-                st.write(st.session_state.data)
+            st.session_state.data = assign_ticket_numbers(st.session_state.data, ticket_col)
+            st.write(st.session_state.data)
 
         if 'Assigned Tickets' in st.session_state.data.columns:
             num_winners = st.number_input("Enter the number of winners:", min_value=1, max_value=len(st.session_state.data))
             if st.button("Select Winners"):
-                winners = select_random_winners(st.session_state.data, num_winners)
+                winners, winning_tickets = select_random_winners(st.session_state.data, num_winners)
                 st.write("Winners:")
                 st.write(winners)
+                st.write("Winning Tickets:")
+                st.write(winning_tickets)
                 st.markdown(get_table_download_link(winners, "winners.csv", "Download Winners Data"), unsafe_allow_html=True)
 
         if city_col:
@@ -38,22 +39,27 @@ def main():
                 max_special_winners = len(st.session_state.data[st.session_state.data[city_col] == special_city])
                 num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=max_special_winners)
                 if st.button("Select Special Winners"):
-                    special_winners = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners)
+                    special_winners, special_winning_tickets = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners)
                     st.write(f"Special Winners from {special_city}:")
                     st.write(special_winners)
+                    st.write("Winning Tickets:")
+                    st.write(special_winning_tickets)
                     st.markdown(get_table_download_link(special_winners, "special_winners.csv", "Download Special Winners Data"), unsafe_allow_html=True)
+            elif 'Assigned Tickets' not in st.session_state.data.columns:
+                st.warning("Please assign ticket numbers before selecting special winners.")
 
 def assign_ticket_numbers(data, ticket_col):
     ticket_counter = 1
     ticket_numbers = []
 
     for _, row in data.iterrows():
-        num_tickets = int(row[ticket_col])
+        num_tickets = int(row[ticket_col])  # Ensure it's an integer
         tickets_for_person = list(range(ticket_counter, ticket_counter + num_tickets))
         ticket_numbers.append(tickets_for_person)
         ticket_counter += num_tickets
 
     data['Assigned Tickets'] = ticket_numbers
+
     return data
 
 def select_random_winners(data, p):
@@ -65,7 +71,8 @@ def select_random_winners(data, p):
         winner_info = data[data['Assigned Tickets'].apply(lambda x: ticket in x)].iloc[0]
         winner_info['Winning Ticket'] = ticket
         winners.append(winner_info)
-    return pd.DataFrame(winners)
+
+    return pd.DataFrame(winners), winning_tickets
 
 def select_special_winners(data, city_col, city, k):
     city_data = data[data[city_col] == city]
@@ -82,7 +89,8 @@ def select_special_winners(data, city_col, city, k):
         winner_info = city_data[city_data['Assigned Tickets'].apply(lambda x: ticket in x)].iloc[0]
         winner_info['Winning Ticket'] = ticket
         city_winners.append(winner_info)
-    return pd.DataFrame(city_winners)
+
+    return pd.DataFrame(city_winners), winning_city_tickets
 
 def get_table_download_link(df, filename, link_text):
     """Generates a link allowing the data in a given panda dataframe to be downloaded
