@@ -11,11 +11,13 @@ def main():
         data = pd.read_excel(uploaded_file)
         st.write(data)
 
-        # Convert ticket_col to integer
-        data['ticket_col'] = data['ticket_col'].astype(int)
+        
 
         # Selecting the required columns
         ticket_col = st.selectbox("Select the column for number of tickets bought:", data.columns, key="ticket_column")
+        data[ticket_col] = data[ticket_col].astype(int)
+        # Convert ticket_col to integer
+        # data['ticket_col'] = data['ticket_col'].astype(int)
         city_col = st.selectbox("Select the column for cities:", data.columns, key="city_column")
         
         if st.button("Assign Ticket Numbers"):
