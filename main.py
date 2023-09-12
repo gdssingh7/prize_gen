@@ -9,7 +9,7 @@ def main():
 
     if uploaded_file is not None:
         data = pd.read_excel(uploaded_file)
-        st.write(data)
+        st.write(data.head())
 
         
 
@@ -22,7 +22,7 @@ def main():
         
         if st.button("Assign Ticket Numbers"):
             data = assign_ticket_numbers(data, ticket_col)
-            st.write(data)
+            st.write(data.head())
 
             # Initialize session states for winners and special winners
             if 'winners' not in st.session_state:
