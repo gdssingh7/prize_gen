@@ -1,51 +1,58 @@
 import streamlit as st
 import pandas as pd
 import random
+
 def main():
     st.title("Prize Generator App")
 
+    if 'data' not in st.session_state:
+        st.session_state.data = pd.DataFrame()
     uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx", key="file_uploader")
 
     if uploaded_file is not None:
-        data = pd.read_excel(uploaded_file)
-        st.write(data.head())
+        st.session_state.data = pd.read_excel(uploaded_file)
+        st.write(st.session_state.data)
 
         # Selecting the required columns
-        ticket_col = st.selectbox("Select the column for number of tickets bought:", [""] + list(data.columns), key="ticket_column")
-        city_col = st.selectbox("Select the column for cities:", [""] + list(data.columns), key="city_column")
+        ticket_col = st.selectbox("Select the column for number of tickets bought:", [""] + list(st.session_state.data.columns), key="ticket_column")
+        city_col = st.selectbox("Select the column for cities:", [""] + list(st.session_state.data.columns), key="city_column")
         
-        if ticket_col and city_col:
+        if ticket_col:
             # Convert ticket_col to integer
-            data[ticket_col] = data[ticket_col].astype(int)
-            
-            if 'Assigned Tickets' not in data.columns:
+            st.session_state.data[ticket_col] = st.session_state.data[ticket_col].astype(int)
+
+            if 'Assigned Tickets' not in st.session_state.data.columns:
                 if st.button("Assign Ticket Numbers"):
-                    data = assign_ticket_numbers(data, ticket_col)
-                    st.write(data.head())
-                    st.session_state.data = data  # Store in session state
-            else:
-                st.write(data.head())
+                    st.session_state.data = assign_ticket_numbers(st.session_state.data, ticket_col)
+                    st.write(st.session_state.data)
+            
+        if 'Assigned Tickets' in st.session_state.data.columns:
+            st.write(st.session_state.data)
             
             # Selecting number of random winners
-            num_winners = st.number_input("Enter the number of winners:", min_value=1, max_value=len(data), value=5, key="num_winners")
+            num_winners = st.number_input("Enter the number of winners:", min_value=1, max_value=len(st.session_state.data), value=None, key="num_winners")
             
-            if st.button("Select Winners"):
-                winners = select_random_winners(data, num_winners)
+            if num_winners and st.button("Select Winners"):
+                winners = select_random_winners(st.session_state.data, num_winners)
                 st.write("Winners:")
                 st.write(winners)
-                
-            # Selecting special winners from a city
-            special_city = st.selectbox("Select a city for special prizes:", [""] + list(data[city_col].unique()), key="special_city")
-            
-            if special_city:
-                max_special_winners = len(data[data[city_col] == special_city])
-                default_value = min(2, max_special_winners)
-                num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=max_special_winners, value=default_value, key="num_special_winners")
 
-                if st.button("Select Special Winners"):
-                    special_winners = select_special_winners(data, city_col, special_city, num_special_winners)
+        if city_col:
+            # Selecting special winners from a city
+            special_city = st.selectbox("Select a city for special prizes:", [""] + list(st.session_state.data[city_col].unique()), key="special_city")
+            
+            if special_city and 'Assigned Tickets' in st.session_state.data.columns:
+                max_special_winners = len(st.session_state.data[st.session_state.data[city_col] == special_city])
+                default_value = min(2, max_special_winners)
+                num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=max_special_winners, value=None, key="num_special_winners")
+        
+                if num_special_winners and st.button("Select Special Winners"):
+                    special_winners = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners)
                     st.write(f"Special Winners from {special_city}:")
                     st.write(special_winners)
+            elif 'Assigned Tickets' not in st.session_state.data.columns:
+                st.warning("Please assign ticket numbers before selecting special winners.")
+
 
 def assign_ticket_numbers(data, ticket_col):
     ticket_counter = 1
