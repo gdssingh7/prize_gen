@@ -28,7 +28,11 @@ def main():
             
             # Selecting special winners from a city
             special_city = st.selectbox("Select a city for special prizes:", data[city_col].unique())
-            num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=len(data[data[city_col] == special_city]), value=2)
+            # num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=len(data[data[city_col] == special_city]), value=2)
+            max_special_winners = len(data[data[city_col] == special_city])
+            default_value = min(2, max_special_winners)
+            num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=max_special_winners, value=default_value)
+
             if st.button("Select Special Winners"):
                 special_winners = select_special_winners(data, city_col, special_city, num_special_winners)
                 st.write(f"Special Winners from {special_city}:")
