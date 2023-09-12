@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import random
+
 def main():
     st.title("Prize Generator App")
 
@@ -13,7 +14,7 @@ def main():
         st.session_state.data = pd.read_excel(uploaded_file)
 
     if st.session_state.data is not None:
-        st.write(st.session_state.data)
+        st.write(st.session_state.data.head())
 
         ticket_col = st.selectbox("Select the column for number of tickets bought:", list(st.session_state.data.columns))
         city_col = st.selectbox("Select the column for cities:", list(st.session_state.data.columns))
@@ -38,8 +39,6 @@ def main():
                     special_winners = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners)
                     st.write(f"Special Winners from {special_city}:")
                     st.write(special_winners)
-
-
 
 def assign_ticket_numbers(data, ticket_col):
     ticket_counter = 1
