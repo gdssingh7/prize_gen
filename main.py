@@ -27,10 +27,12 @@ def main():
             num_winners = st.number_input("Enter the number of winners:", min_value=1, max_value=len(st.session_state.data))
             if st.button("Select Winners"):
                 winners, winning_tickets = select_random_winners(st.session_state.data, num_winners)
+                st.session_state.winning_tickets = winning_tickets 
                 st.write("Winners:")
                 st.write(winners)
                 st.write("Winning Tickets:")
                 st.write(winning_tickets)
+                
                 st.markdown(get_table_download_link(winners, "winners.csv", "Download Winners Data"), unsafe_allow_html=True)
 
         if city_col:
@@ -40,7 +42,7 @@ def main():
                 num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=max_special_winners)
                 if st.button("Select Special Winners"):
                     # special_winners, special_winning_tickets = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners)
-                    special_winners, special_winning_tickets = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners, winning_tickets)
+                    special_winners, special_winning_tickets = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners, st.session_state.winning_tickets)
                     st.write(f"Special Winners from {special_city}:")
                     st.write(special_winners)
                     st.write("Winning Tickets:")
