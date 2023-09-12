@@ -39,7 +39,8 @@ def main():
                 max_special_winners = len(st.session_state.data[st.session_state.data[city_col] == special_city])
                 num_special_winners = st.number_input("Enter the number of special winners:", min_value=1, max_value=max_special_winners)
                 if st.button("Select Special Winners"):
-                    special_winners, special_winning_tickets = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners)
+                    # special_winners, special_winning_tickets = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners)
+                    special_winners, special_winning_tickets = select_special_winners(st.session_state.data, city_col, special_city, num_special_winners, winning_tickets)
                     st.write(f"Special Winners from {special_city}:")
                     st.write(special_winners)
                     st.write("Winning Tickets:")
@@ -74,9 +75,9 @@ def select_random_winners(data, p):
 
     return pd.DataFrame(winners), winning_tickets
 
-def select_special_winners(data, city_col, city, k):
+def select_special_winners(data, city_col, city, k, excluded_tickets=[]):
     city_data = data[data[city_col] == city]
-    all_city_tickets = [ticket for sublist in city_data['Assigned Tickets'] for ticket in sublist]
+    all_city_tickets = [ticket for sublist in city_data['Assigned Tickets'] for ticket in sublist if ticket not in excluded_tickets]
     
     if k > len(all_city_tickets):
         st.warning("The number of special prizes exceeds the total number of tickets from the selected city. Adjusting to maximum available.")
@@ -91,6 +92,7 @@ def select_special_winners(data, city_col, city, k):
         city_winners.append(winner_info)
 
     return pd.DataFrame(city_winners), winning_city_tickets
+
 
 def get_table_download_link(df, filename, link_text):
     """Generates a link allowing the data in a given panda dataframe to be downloaded
